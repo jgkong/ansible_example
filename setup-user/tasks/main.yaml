@@ -1,0 +1,13 @@
+---
+- name: Add ibmcloud user
+  user:
+    name: ibmcloud
+    shell: /bin/bash
+    groups: docker
+
+- name: Give sudo authorization to user
+  lineinfile:
+    path: /etc/sudoers.d/90-cloud-init-users
+    regexp: '^ibmcloud '
+    line: 'ibmcloud ALL=(ALL) NOPASSWD:ALL'
+    validate: '/usr/sbin/visudo -cf %s'
