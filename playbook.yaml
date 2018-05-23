@@ -1,0 +1,84 @@
+---
+- hosts: tutorial
+
+  user: root
+
+  tasks:
+
+  - name: Install packages to allow apt to use a repository over HTTPS
+    apt:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+    with_items:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+
+  - name: Add Docker’s official GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      id: 0EBFCD88
+
+  - name: Set up the stable repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+
+  - name: Install Docker CE
+    apt:
+      name: docker-ce
+      update_cache: yes
+
+  - name: Add ibmcloud user
+    user:
+      name: ibmcloud
+      shell: /bin/bash
+      groups: docker
+
+  - name: Give sudo authorization to user
+    lineinfile:
+      path: /etc/sudoers.d/90-cloud-init-users
+      regexp: '^ibmcloud '
+      line: 'ibmcloud ALL=(ALL) NOPASSWD:ALL'
+      validate: '/usr/sbin/visudo -cf %s'
+
+  - name: Add Golang ppa
+    apt_repository:
+      repo: 'ppa:gophers/archive'
+
+  - name: Install Golang 1.9
+    apt:
+      name: golang-1.9-go
+      update_cache: yes
+
+  - name: Set GOROOT
+    copy:
+      src: goroot.sh
+      dest: /etc/profile.d/gopath.sh
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Set GOPATH
+    lineinfile:
+      path: /home/ibmcloud/.bashrc
+      regexp: '^export GOPATH'
+      line: 'export GOPATH=$HOME/go; export PATH=$PATH:$GOPATH/bin'
+
+
+  - name: Install Golang 1.9
+    apt:
+      name: golang-1.9-go
+      update_cache: yes
+
+  - name: Install packages
+    apt:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+    with_items:
+      - fail2ban
+      - python
+      - python3-pip
+      - unzip
